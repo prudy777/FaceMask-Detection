@@ -1,0 +1,20 @@
+# Core ML dependencies
+torch>=2.0.0
+torchvision>=0.15.0
+
+# API framework
+fastapi>=0.104.0
+uvicorn[standard]>=0.24.0
+python-multipart>=0.0.6
+
+# Image processing
+opencv-python>=4.8.0
+numpy<2.0.0
+Pillow>=10.0.0
+
+# CORS
+starlette>=0.27.0
+
+# Testing
+pytest>=7.0.0
+httpx>=0.24.0

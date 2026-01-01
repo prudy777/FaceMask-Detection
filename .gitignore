@@ -1,0 +1,35 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+ENV/
+.venv/
+.pytest_cache/
+
+# Model files (large - use Git LFS or add separately)
+# *.pth
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Node
+node_modules/
+dist/
+.env
+.env.local
+.env.production
+
+# Build artifacts
+*.egg-info/
+build/

@@ -1,0 +1,12 @@
+# Ignore
+venv/
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.git/
+.gitignore
+*.md
+tests/
+run.sh
+run_tests.sh

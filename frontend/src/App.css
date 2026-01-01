@@ -1,0 +1,25 @@
+/* App-specific styles */
+/* Most styles are in index.css design system */
+
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+@media (max-width: 600px) {
+  .app-header {
+    flex-direction: column;
+    gap: 1rem;
+    text-align: center;
+  }
+
+  .tabs {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .app-main {
+    padding: 1rem;
+  }
+}
