@@ -1,0 +1,30 @@
+steps:
+  # Build the container image
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'gcr.io/$PROJECT_ID/mask-detection-frontend', '.']
+    dir: 'frontend'  # Run in frontend directory
+
+  # Push the container image
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/$PROJECT_ID/mask-detection-frontend']
+
+  # Deploy to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - 'mask-frontend'
+      - '--image'
+      - 'gcr.io/$PROJECT_ID/mask-detection-frontend'
+      - '--region'
+      - 'us-central1'
+      - '--platform'
+      - 'managed'
+      - '--amount'  # Lower memory for frontend
+      - '256Mi'
+      - '--allow-unauthenticated'
+      # Note: VITE_API_URL must be set manually in Cloud Run UI or via substitution if known
+
+images:
+  - 'gcr.io/$PROJECT_ID/mask-detection-frontend'
