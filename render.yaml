@@ -1,36 +1,35 @@
-# Render Blueprint - Deploy both services
-# https://render.com/docs/blueprint-spec
+# Render Blueprint - Native Python + Node (no Docker)
 
 services:
-  # Backend API (Python/FastAPI)
+  # Backend API (Python)
   - type: web
     name: mask-backend
-    runtime: docker
-    dockerfilePath: ./backend/Dockerfile
-    dockerContext: ./backend
-    region: frankfurt  # EU region
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    rootDir: backend
+    region: oregon
     plan: standard  # Need 2GB+ RAM for PyTorch
     healthCheckPath: /api/health
     envVars:
+      - key: PYTHON_VERSION
+        value: "3.11.4"
       - key: ALLOW_ALL_ORIGINS
         value: "true"
-      - key: PORT
-        value: "8080"
 
-  # Frontend (Static Site)
+  # Frontend (Static Site with Node build)
   - type: web
     name: mask-frontend
     runtime: static
-    buildCommand: cd frontend && npm ci && npm run build
-    staticPublishPath: ./frontend/dist
-    headers:
-      - path: /*
-        name: Cache-Control
-        value: public, max-age=31536000
+    buildCommand: npm ci && npm run build
+    staticPublishPath: dist
+    rootDir: frontend
     routes:
       - type: rewrite
         source: /*
         destination: /index.html
     envVars:
+      - key: NODE_VERSION
+        value: "20"
       - key: VITE_API_URL
         sync: false  # Set manually after backend deploys
