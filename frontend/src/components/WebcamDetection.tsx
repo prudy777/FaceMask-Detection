@@ -4,9 +4,10 @@ import type { Detection } from '../services/api';
 
 interface WebcamDetectionProps {
     isActive: boolean;
+    detectionMode: 'multi' | 'binary';
 }
 
-const WebcamDetection: React.FC<WebcamDetectionProps> = ({ isActive }) => {
+const WebcamDetection: React.FC<WebcamDetectionProps> = ({ isActive, detectionMode }) => {
     const videoRef = useRef<HTMLVideoElement>(null);
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const streamRef = useRef<MediaStream | null>(null);
@@ -144,7 +145,7 @@ const WebcamDetection: React.FC<WebcamDetectionProps> = ({ isActive }) => {
         try {
             const frameBlob = await captureFrame();
             if (frameBlob) {
-                const result = await predictFrame(frameBlob);
+                const result = await predictFrame(frameBlob, detectionMode);
                 setDetections(result.detections);
                 setProcessingTime(result.processing_time_ms);
                 drawDetections(result.detections);
@@ -165,7 +166,7 @@ const WebcamDetection: React.FC<WebcamDetectionProps> = ({ isActive }) => {
         if (isDetecting) {
             animationRef.current = requestAnimationFrame(runDetection);
         }
-    }, [isDetecting, isStreaming, captureFrame, drawDetections]);
+    }, [isDetecting, isStreaming, captureFrame, drawDetections, detectionMode]);
 
     const toggleDetection = useCallback(() => {
         if (isDetecting) {

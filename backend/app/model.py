@@ -16,6 +16,7 @@ from .config import (
     MODEL_PATH,
     MODEL_INPUT_SIZE,
     CLASS_LABELS,
+    BINARY_MAPPING,
     NORMALIZE_MEAN,
     NORMALIZE_STD,
 )
@@ -151,12 +152,13 @@ class MaskDetectionModel:
         return self.preprocess_image(image)
     
     @torch.no_grad()
-    def predict(self, image: Image.Image) -> Tuple[str, float, list]:
+    def predict(self, image: Image.Image, binary_mode: bool = False) -> Tuple[str, float, list]:
         """
         Run inference on a single image.
         
         Args:
             image: PIL Image to classify.
+            binary_mode: If True, return binary classification (With/Without Mask).
         
         Returns:
             Tuple of (predicted_label, confidence, all_probabilities)
@@ -168,23 +170,51 @@ class MaskDetectionModel:
         outputs = self.model(input_tensor)
         probabilities = torch.softmax(outputs, dim=1)[0]
         
-        confidence, predicted_idx = torch.max(probabilities, 0)
-        predicted_label = self.class_labels[predicted_idx.item()]
-        
+        # Default Multi-class Logic
         all_probs = [
             {"label": label, "probability": prob.item()}
             for label, prob in zip(self.class_labels, probabilities)
         ]
         
-        return predicted_label, confidence.item(), all_probs
+        if not binary_mode:
+            confidence, predicted_idx = torch.max(probabilities, 0)
+            predicted_label = self.class_labels[predicted_idx.item()]
+            return predicted_label, confidence.item(), all_probs
+            
+        # Binary Mode Logic
+        # Aggregate probabilities
+        binary_probs = {"With Mask": 0.0, "Without Mask": 0.0}
+        
+        for item in all_probs:
+            original_label = item["label"]
+            prob = item["probability"]
+            binary_label = BINARY_MAPPING[original_label]
+            binary_probs[binary_label] += prob
+            
+        # Determine winner
+        if binary_probs["With Mask"] > binary_probs["Without Mask"]:
+            predicted_label = "With Mask"
+            confidence = binary_probs["With Mask"]
+        else:
+            predicted_label = "Without Mask"
+            confidence = binary_probs["Without Mask"]
+            
+        # Return binary probabilities structure
+        binary_probs_list = [
+            {"label": "With Mask", "probability": binary_probs["With Mask"]},
+            {"label": "Without Mask", "probability": binary_probs["Without Mask"]},
+        ]
+        
+        return predicted_label, confidence, binary_probs_list
     
     @torch.no_grad()
-    def predict_frame(self, frame: np.ndarray) -> Tuple[str, float, list]:
+    def predict_frame(self, frame: np.ndarray, binary_mode: bool = False) -> Tuple[str, float, list]:
         """
         Run inference on an OpenCV frame.
         
         Args:
             frame: BGR numpy array from OpenCV.
+            binary_mode: If True, return binary classification.
         
         Returns:
             Tuple of (predicted_label, confidence, all_probabilities)
@@ -196,15 +226,40 @@ class MaskDetectionModel:
         outputs = self.model(input_tensor)
         probabilities = torch.softmax(outputs, dim=1)[0]
         
-        confidence, predicted_idx = torch.max(probabilities, 0)
-        predicted_label = self.class_labels[predicted_idx.item()]
-        
+        # Default Multi-class Logic
         all_probs = [
             {"label": label, "probability": prob.item()}
             for label, prob in zip(self.class_labels, probabilities)
         ]
         
-        return predicted_label, confidence.item(), all_probs
+        if not binary_mode:
+            confidence, predicted_idx = torch.max(probabilities, 0)
+            predicted_label = self.class_labels[predicted_idx.item()]
+            return predicted_label, confidence.item(), all_probs
+            
+        # Binary Mode Logic
+        binary_probs = {"With Mask": 0.0, "Without Mask": 0.0}
+        
+        for item in all_probs:
+            original_label = item["label"]
+            prob = item["probability"]
+            binary_label = BINARY_MAPPING[original_label]
+            binary_probs[binary_label] += prob
+            
+        # Determine winner
+        if binary_probs["With Mask"] > binary_probs["Without Mask"]:
+            predicted_label = "With Mask"
+            confidence = binary_probs["With Mask"]
+        else:
+            predicted_label = "Without Mask"
+            confidence = binary_probs["Without Mask"]
+            
+        binary_probs_list = [
+            {"label": "With Mask", "probability": binary_probs["With Mask"]},
+            {"label": "Without Mask", "probability": binary_probs["Without Mask"]},
+        ]
+        
+        return predicted_label, confidence, binary_probs_list
 
 
 # Global model instance

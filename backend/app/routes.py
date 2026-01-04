@@ -35,7 +35,7 @@ async def health_check():
 
 
 @router.post("/predict-image", response_model=ImagePredictionResponse)
-async def predict_image(file: UploadFile = File(...)):
+async def predict_image(mode: str = "multi", file: UploadFile = File(...)):
     """
     Analyze an uploaded image for face mask detection.
     
@@ -66,10 +66,11 @@ async def predict_image(file: UploadFile = File(...)):
         
         model = get_model()
         detections: List[DetectionResult] = []
+        is_binary = (mode == "binary")
         
         if len(faces) == 0:
             # No faces detected - classify entire image
-            label, confidence, all_probs = model.predict(image)
+            label, confidence, all_probs = model.predict(image, binary_mode=is_binary)
             detections.append(DetectionResult(
                 label=label,
                 confidence=confidence,
@@ -86,7 +87,7 @@ async def predict_image(file: UploadFile = File(...)):
                 face_region = face_detector.extract_face_region(image_bgr, face)
                 face_pil = Image.fromarray(cv2.cvtColor(face_region, cv2.COLOR_BGR2RGB))
                 
-                label, confidence, all_probs = model.predict(face_pil)
+                label, confidence, all_probs = model.predict(face_pil, binary_mode=is_binary)
                 detections.append(DetectionResult(
                     label=label,
                     confidence=confidence,
@@ -114,7 +115,7 @@ async def predict_image(file: UploadFile = File(...)):
 
 
 @router.post("/predict-frame", response_model=FramePredictionResponse)
-async def predict_frame(file: UploadFile = File(...)):
+async def predict_frame(mode: str = "multi", file: UploadFile = File(...)):
     """
     Process a single video frame for real-time detection.
     
@@ -144,10 +145,11 @@ async def predict_frame(file: UploadFile = File(...)):
         
         model = get_model()
         detections: List[DetectionResult] = []
+        is_binary = (mode == "binary")
         
         for face in faces:
             face_region = face_detector.extract_face_region(frame, face)
-            label, confidence, all_probs = model.predict_frame(face_region)
+            label, confidence, all_probs = model.predict_frame(face_region, binary_mode=is_binary)
             
             detections.append(DetectionResult(
                 label=label,
@@ -177,7 +179,7 @@ async def predict_frame(file: UploadFile = File(...)):
 
 
 @router.post("/predict-frame-base64", response_model=FramePredictionResponse)
-async def predict_frame_base64(data: dict):
+async def predict_frame_base64(data: dict, mode: str = "multi"):
     """
     Process a base64-encoded video frame for real-time detection.
     
@@ -219,10 +221,11 @@ async def predict_frame_base64(data: dict):
         
         model = get_model()
         detections: List[DetectionResult] = []
+        is_binary = (mode == "binary")
         
         for face in faces:
             face_region = face_detector.extract_face_region(frame, face)
-            label, confidence, all_probs = model.predict_frame(face_region)
+            label, confidence, all_probs = model.predict_frame(face_region, binary_mode=is_binary)
             
             detections.append(DetectionResult(
                 label=label,

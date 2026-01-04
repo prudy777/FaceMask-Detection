@@ -51,11 +51,14 @@ export async function checkHealth(): Promise<HealthResponse> {
 /**
  * Upload an image for mask detection
  */
-export async function predictImage(file: File): Promise<ImagePredictionResponse> {
+/**
+ * Upload an image for mask detection
+ */
+export async function predictImage(file: File, mode: string = 'multi'): Promise<ImagePredictionResponse> {
   const formData = new FormData();
   formData.append('file', file);
 
-  const response = await fetch(`${API_BASE_URL}/predict-image`, {
+  const response = await fetch(`${API_BASE_URL}/predict-image?mode=${mode}`, {
     method: 'POST',
     body: formData,
   });
@@ -71,11 +74,11 @@ export async function predictImage(file: File): Promise<ImagePredictionResponse>
 /**
  * Send a video frame for real-time detection
  */
-export async function predictFrame(imageBlob: Blob): Promise<FramePredictionResponse> {
+export async function predictFrame(imageBlob: Blob, mode: string = 'multi'): Promise<FramePredictionResponse> {
   const formData = new FormData();
   formData.append('file', imageBlob, 'frame.jpg');
 
-  const response = await fetch(`${API_BASE_URL}/predict-frame`, {
+  const response = await fetch(`${API_BASE_URL}/predict-frame?mode=${mode}`, {
     method: 'POST',
     body: formData,
   });
@@ -91,8 +94,8 @@ export async function predictFrame(imageBlob: Blob): Promise<FramePredictionResp
 /**
  * Send a base64-encoded frame for real-time detection
  */
-export async function predictFrameBase64(base64Image: string): Promise<FramePredictionResponse> {
-  const response = await fetch(`${API_BASE_URL}/predict-frame-base64`, {
+export async function predictFrameBase64(base64Image: string, mode: string = 'multi'): Promise<FramePredictionResponse> {
+  const response = await fetch(`${API_BASE_URL}/predict-frame-base64?mode=${mode}`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

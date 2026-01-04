@@ -3,10 +3,11 @@ import { predictImage } from '../services/api';
 import type { ImagePredictionResponse } from '../services/api';
 
 interface ImageUploadProps {
+    detectionMode: 'multi' | 'binary';
     onResult?: (result: ImagePredictionResponse) => void;
 }
 
-const ImageUpload: React.FC<ImageUploadProps> = ({ onResult }) => {
+const ImageUpload: React.FC<ImageUploadProps> = ({ detectionMode, onResult }) => {
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [isDragOver, setIsDragOver] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
@@ -26,7 +27,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({ onResult }) => {
         setResult(null);
 
         try {
-            const response = await predictImage(file);
+            const response = await predictImage(file, detectionMode);
             setResult(response);
             onResult?.(response);
         } catch (err) {
@@ -34,7 +35,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({ onResult }) => {
         } finally {
             setIsLoading(false);
         }
-    }, [onResult]);
+    }, [detectionMode, onResult]);
 
     const handleDrop = useCallback((e: React.DragEvent) => {
         e.preventDefault();

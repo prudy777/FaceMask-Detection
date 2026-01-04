@@ -12,7 +12,16 @@ MODEL_PATH = MODEL_DIR / "best_mask_model.pth"
 MODEL_INPUT_SIZE = (224, 224)
 
 # Class labels (user's training order)
+# Class labels (user's training order)
 CLASS_LABELS = ["Face Mask Worn Correctly", "FaceMask Worn Incorrectly", "No FaceMask"]
+
+# Binary Mode Mapping
+# Maps original labels to binary categories
+BINARY_MAPPING = {
+    "Face Mask Worn Correctly": "With Mask",
+    "FaceMask Worn Incorrectly": "Without Mask",
+    "No FaceMask": "Without Mask"
+}
 
 # Image normalization (ImageNet standard)
 NORMALIZE_MEAN = [0.485, 0.456, 0.406]

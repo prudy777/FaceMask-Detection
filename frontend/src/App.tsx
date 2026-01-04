@@ -9,6 +9,7 @@ type TabType = 'upload' | 'webcam';
 
 function App() {
   const [activeTab, setActiveTab] = useState<TabType>('upload');
+  const [detectionMode, setDetectionMode] = useState<'multi' | 'binary'>('multi');
   const [health, setHealth] = useState<HealthResponse | null>(null);
   const [healthError, setHealthError] = useState(false);
 
@@ -36,13 +37,34 @@ function App() {
           <span>🛡️</span>
           Face Mask Detection
         </h1>
-        <div className={`status-badge ${health && !healthError ? 'online' : 'offline'}`}>
-          <span className={`status-dot ${health && !healthError ? 'online' : 'offline'}`}></span>
-          {health && !healthError ? (
-            <>API Online ({health.device})</>
-          ) : (
-            <>API Offline</>
-          )}
+        <div className="header-controls">
+          <div className="mode-selector">
+            <span className="mode-label">Mode:</span>
+            <div className="mode-toggle">
+              <button
+                className={`mode-btn ${detectionMode === 'multi' ? 'active' : ''}`}
+                onClick={() => setDetectionMode('multi')}
+                title="Detect: Mask Correct, Mask Incorrect, No Mask"
+              >
+                Multi-class
+              </button>
+              <button
+                className={`mode-btn ${detectionMode === 'binary' ? 'active' : ''}`}
+                onClick={() => setDetectionMode('binary')}
+                title="Detect: Mask, No Mask"
+              >
+                Binary
+              </button>
+            </div>
+          </div>
+          <div className={`status-badge ${health && !healthError ? 'online' : 'offline'}`}>
+            <span className={`status-dot ${health && !healthError ? 'online' : 'offline'}`}></span>
+            {health && !healthError ? (
+              <>API Online ({health.device})</>
+            ) : (
+              <>API Offline</>
+            )}
+          </div>
         </div>
       </header>
 
@@ -64,8 +86,15 @@ function App() {
         </div>
 
         {/* Tab Content */}
-        {activeTab === 'upload' && <ImageUpload />}
-        {activeTab === 'webcam' && <WebcamDetection isActive={activeTab === 'webcam'} />}
+        {activeTab === 'upload' && (
+          <ImageUpload detectionMode={detectionMode} />
+        )}
+        {activeTab === 'webcam' && (
+          <WebcamDetection
+            isActive={activeTab === 'webcam'}
+            detectionMode={detectionMode}
+          />
+        )}
       </main>
     </div>
   );
