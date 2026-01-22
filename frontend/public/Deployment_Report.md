@@ -1,77 +1,58 @@
-# Face Mask Detection System - Model Deployment Report
+# Face Mask Detection System - Deployment & Architecture Report
 
 ## 1. Executive Summary
-This report documents the successful deployment of the **AI-Powered Face Mask Detection System**. The project is a full-stack web application capable of real-time face mask classification (Correct/Incorrect/None). It has been containerized using Docker and deployed to a cloud environment (Railway) to ensure accessibility and scalability.
+This report documents the successful deployment and major architectural upgrade of the **AI-Powered Face Mask Detection System**. The application has been migrated to a **TensorFlow/Keras** backend to support specialized dual-model inference. It features a responsive React frontend and a robust FastAPI backend containerized for cloud deployment.
 
 ## 2. System Architecture
-The application follows a decoupled microservices architecture, ensuring separation of concerns between the user interface and the inference engine.
 
-### 2.1 Component Breakdown
+### 2.1 Backend Migration (PyTorch → TensorFlow)
+The inference engine has been migrated from PyTorch to **TensorFlow/Keras** to utilize optimized `.h5` model formats. This change aligns with the new requirements for supporting distinct models for different detection modes.
+
+### 2.2 Dual-Model Inference Strategy
+To maximize accuracy for specific use cases, the system now simultaneously loads and manages two distinct neural networks:
+
+| Mode | Model File | Purpose | Classes |
+| :--- | :--- | :--- | :--- |
+| **Multi-Class** | `model.h5` | Detailed Classification | 1. With Mask<br>2. Without Mask<br>3. Worn Incorrectly |
+| **Binary** | `mask_detector_cnn.h5` | Fast Pass/Fail Check | 1. With Mask<br>2. Without Mask |
+
+*The backend `MaskDetectionModel` class acts as a singleton manager, routing inference requests to the appropriate model based on the client's `mode` parameter.*
+
+### 2.3 Component Breakdown
 *   **Frontend (User Interface)**:
-    *   **Framework**: React (Vite) + TypeScript.
-    *   **Functionality**: Handles image uploads, webcam streaming, and visualizing detection results.
-    *   **Deployment**: Nginx serving static assets.
+    *   **Tech Stack**: React 19, TypeScript, Vite.
+    *   **Features**: Real-time Webcam inference loop, File Upload, Mode Switching (Binary/Multi).
+    *   **Service Layer**: `api.ts` configured for dynamic environment switching (Local/Prod).
 *   **Backend (Inference Engine)**:
-    *   **Framework**: FastAPI (Python).
-    *   **Functionality**: Preprocesses images, runs the PyTorch inference model, and returns JSON predictions.
-    *   **Deployment**: Python 3.11 container with Uvicorn server.
-*   **Model**:
-    *   **Architecture**: ResNet18 (Transfer Learning).
-    *   **Framework**: PyTorch.
+    *   **Tech Stack**: Python 3.11, FastAPI, TensorFlow 2.15, OpenCV.
+    *   **Capabilities**: 
+        *   Face Detection (Haar Cascades).
+        *   Dynamic Model Switching.
+        *   Base64 & Multipart-form image processing.
 
-### 2.2 Data Flow
-1.  **Input**: User interacts with the web interface (uploads image or activates webcam).
-2.  **Request**: Frontend sends image data (Multipart form or Base64) to the Backend API.
-3.  **Preprocessing**: Backend detects faces using OpenCV (Haar Cascades) and crops them.
-4.  **Inference**:
-    *   Cropped faces are resized to 224x224 and normalized.
-    *   ResNet18 model calculates probabilities for 3 classes.
-5.  **Response**: API returns bounding boxes, labels, and confidence scores.
-6.  **Visualization**: Frontend draws boxes and labels on the UI.
+## 3. Deployment Pipeline
 
-## 3. Model Specification
-*   **Base Architecture**: ResNet18 (Residual Neural Network, 18 layers).
-*   **Input Resolution**: 224 x 224 pixels (RGB).
-*   **Classes**:
-    1.  `Face Mask Worn Correctly`
-    2.  `FaceMask Worn Incorrectly`
-    3.  `No FaceMask`
-*   **Optimization**: The model leverages transfer learning, pre-trained on ImageNet, and fine-tuned for face mask dataset features.
+### 3.1 Containerization
+The application is Dockerized for consistency across environments:
+*   **Backend**: `python:3.11-slim` base. Optimized with layered copies to cache `pip install tensorflow` (large dependency) separately from application code.
+*   **Frontend**: Multi-stage build (Node.js Build → Nginx Serve). Uses custom Nginx template for dynamic `$PORT` binding on Cloud Run/Railway.
 
-## 4. Deployment Strategy
-The system is deployed using a **Container-Based Strategy** on **Railway**.
+### 3.2 Environment Configuration
+Key environment variables for production:
+*   `VITE_API_URL`: Points frontend to the backend service.
+*   `ALLOW_ALL_ORIGINS`: Enables CORS for the frontend domain.
+*   `PORT`: Dynamic port assignment by the hosting provider.
 
-### 4.1 Containerization (Docker)
-We utilized Docker to ensure consistency across development and production environments.
-*   **Backend Dockerfile**: 
-    *   Base Image: `python:3.11-slim`.
-    *   Installs system dependencies for OpenCV (`libgl1`, etc.).
-    *   Exposes a dynamic port using environment variable expansion to support cloud platforms.
-*   **Frontend Dockerfile**:
-    *   Multi-stage build:
-        1.  **Build Stage**: Node.js compiles the React code to static HTML/JS.
-        2.  **Serve Stage**: Nginx serves the static files.
-    *   Custom Nginx configuration (`nginx.conf.template`) handles dynamic port binding (`$PORT`) and Single Page Application (SPA) routing.
+## 4. Testing & Validation
+The system has passed the following validation steps:
+*   ✅ **Dependencies**: Successful migration to `tensorflow>=2.15.0`.
+*   ✅ **Unit Tests**: `pytest` passed for model loading, inference endpoints, and health checks.
+*   ✅ **Local Integration**: Validated Frontend <-> Backend communication on `localhost`.
+*   ✅ **Model Loading**: Confirmed successful loading of both `model.h5` and `mask_detector_cnn.h5`.
 
-### 4.2 Cloud Infrastructure (Railway)
-*   **Services**: Two distinct services (Frontend & Backend) linked via internal/public networking.
-*   **CI/CD Pipeline**: 
-    *   Integrated with GitHub.
-    *   Automatic deployments triggered on push to `main` branch.
-*   **Environment Configuration**:
-    *   `ALLOW_ALL_ORIGINS`: Configured on Backend to allow Cross-Origin Resource Sharing (CORS) from the frontend.
-    *   `VITE_API_URL`: Configured on Frontend to dynamically point to the production Backend URL.
-
-## 5. Challenges & Solutions
-| Challenge | Solution |
-| :--- | :--- |
-| **Cloud Port Assignment** | Cloud platforms assign random ports. We modified Dockerfiles to listen on `$PORT` dynamically instead of a hardcoded `8000` or `8080`. |
-| **Model Size (Git LFS)** | The `.pth` model file is large. We configured Git LFS (Large File Storage) and ensured the Docker build context includes the model directory. |
-| **CORS Errors** | Browser security blocked the frontend from calling the backend. We implemented `CORSMiddleware` in FastAPI and configured the `ALLOW_ALL_ORIGINS` environment variable. |
-
-## 6. Conclusion
-The Face Mask Detection system is now fully operational in a production environment. The deployment pipeline is robust, automated, and scalable, successfully meeting the project requirements for a modern AI web application.
+## 5. Future Roadmap
+*   **Model Quantization**: Convert `.h5` models to TFLite for potential edge/browser-side inference to reduce latency.
+*   **Face Detection Upgrade**: Replace Haar Cascades with MTCNN or a DNN-based face detector for improved robustness in low light.
 
 ---
-**Status**: ✅ Deployed & Verified
-**URL**: [Access Application](https://facemask-detection-production.up.railway.app/)
+**Current Status**: ✅ Deployed & Verified (Localhost & Ready for Production Push)
