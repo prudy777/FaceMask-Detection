@@ -1,24 +1,23 @@
-# Face Mask Detection Model
+# Face Mask Detection Models
 
-Place your `best_mask_model.pth` file in this directory.
+This directory contains the trained Keras/TensorFlow models used by the backend.
 
-## Expected Model Format
+## Model Files
 
-The backend expects a PyTorch model with the following specifications:
+1.  **Multi-Class Model** (`model.h5`)
+    - Used for standard multi-class detection.
+    - Expected classes: "With Mask", "Without Mask", "Mask Worn Incorrectly".
+    - Format: Keras `.h5` model.
 
-- **Architecture**: MobileNetV2 (or similar) with a 3-class output head
+2.  **Binary Model** (`mask_detector_cnn.h5`)
+    - Used for binary detection (With/Without Mask).
+    - Format: Keras `.h5` model.
+
+## Input Specifications
+
 - **Input Size**: 224x224 RGB images
-- **Output Classes**: 
-  1. "With Mask"
-  2. "Without Mask"  
-  3. "Mask Worn Incorrectly"
+- **Preprocessing**: Resizing + Normalization (1/255.0)
 
-## Supported Save Formats
+## Implementation Details
 
-The model loader supports multiple save formats:
-- Direct state_dict: `torch.save(model.state_dict(), 'model.pth')`
-- Dict with key: `torch.save({'model_state_dict': model.state_dict()}, 'model.pth')`
-- Dict with key: `torch.save({'state_dict': model.state_dict()}, 'model.pth')`
-
-If you need to use a different architecture (ResNet, etc.), modify the 
-`_create_model_architecture()` method in `app/model.py`.
+The backend uses `tensorflow.keras` to load these models. Logic is handled in `app/model.py`.

@@ -8,15 +8,19 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 MODEL_DIR = BASE_DIR / "models"
 
 # Model configuration
-MODEL_PATH = MODEL_DIR / "best_mask_model.pth"
+# Model configuration
+MULTI_MODEL_PATH = MODEL_DIR / "model.h5"
+BINARY_MODEL_PATH = MODEL_DIR / "mask_detector_cnn.h5"
 MODEL_INPUT_SIZE = (224, 224)
 
-# Class labels (user's training order)
-# Class labels (user's training order)
+# Class labels (assumed for generic model.h5)
+# If this model differs from previous, these might need adjustment
 CLASS_LABELS = ["Face Mask Worn Correctly", "FaceMask Worn Incorrectly", "No FaceMask"]
 
-# Binary Mode Mapping
-# Maps original labels to binary categories
+# Binary Class Labels (assumed for mask_detector_cnn.h5)
+BINARY_CLASS_LABELS = ["With Mask", "Without Mask"]
+
+# Binary Mode Mapping (for multi-class aggregation fallback if needed)
 BINARY_MAPPING = {
     "Face Mask Worn Correctly": "With Mask",
     "FaceMask Worn Incorrectly": "Without Mask",

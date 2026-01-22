@@ -27,10 +27,19 @@ router = APIRouter()
 async def health_check():
     """Check API health and model status."""
     model = get_model()
+    
+    # Check if at least one model is loaded
+    is_loaded = (model.multi_model is not None) or (model.binary_model is not None)
+    
+    # Get device info
+    import tensorflow as tf
+    gpus = tf.config.list_physical_devices('GPU')
+    device = "cuda" if gpus else "cpu"
+    
     return HealthResponse(
         status="healthy",
-        model_loaded=model.model is not None,
-        device=str(model.device),
+        model_loaded=is_loaded,
+        device=device,
     )
 
 
