@@ -3,7 +3,7 @@
  */
 
 // Use environment variable or default to localhost for development
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://beautiful-energy-production-cf12.up.railway.app/api';
 
 export interface ProbabilityScore {
   label: string;
