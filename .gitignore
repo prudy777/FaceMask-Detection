@@ -13,7 +13,6 @@ ENV/
 # *.pth
 
 # IDE
-.vscode/
 .idea/
 
 # OS
@@ -26,10 +25,8 @@ Thumbs.db
 # Node
 node_modules/
 dist/
-.env
-.env.local
-.env.production
 
 # Build artifacts
 *.egg-info/
 build/
+config.bat
